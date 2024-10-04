@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import mysql.connector
 from urllib.parse import urlparse
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -24,21 +25,22 @@ def recibir_datos():
     data = request.get_json()
     temperatura = data.get('temperatura')
     humedad = data.get('humedad')
+    fecha_hora = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # Obtener la hora actual
 
     # Conectar a MySQL
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
-        # Insertar los datos en la tabla
-        query = "INSERT INTO sensores (temperatura, humedad) VALUES (%s, %s)"
-        cursor.execute(query, (temperatura, humedad))
+        # Insertar los datos en la tabla, incluyendo la fecha y hora
+        query = "INSERT INTO sensores (temperatura, humedad, fecha_hora) VALUES (%s, %s, %s)"
+        cursor.execute(query, (temperatura, humedad, fecha_hora))
         conn.commit()
 
         cursor.close()
         conn.close()
 
-        return jsonify({'message': 'Datos insertados correctamente'}), 200
+        return jsonify({'message': 'Datos insertados correctamente', 'fecha_hora': fecha_hora}), 200
     except mysql.connector.Error as err:
         print("Error:", err)
         return jsonify({'error': str(err)}), 500
